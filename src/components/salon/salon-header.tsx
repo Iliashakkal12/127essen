@@ -14,8 +14,8 @@ export function SalonHeader({ salon }: { salon: Salon }) {
         className="h-52 w-full sm:h-64 lg:h-72"
       />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="-mt-8 flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:-mt-10 sm:p-7">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="-mt-6 flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:-mt-8 sm:p-7">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
             <div>
               <div className="mb-2 flex flex-wrap items-center gap-2">

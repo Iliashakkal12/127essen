@@ -1,8 +1,8 @@
-import { revenueByService } from "@/data/finance";
+import type { RevenueByServiceEntry } from "@/lib/types";
 import { Progress } from "@/components/ui/progress";
 
-export function RevenueByService() {
-  const max = Math.max(...revenueByService.map((s) => s.revenue));
+export function RevenueByService({ revenueByService }: { revenueByService: RevenueByServiceEntry[] }) {
+  const max = Math.max(1, ...revenueByService.map((s) => s.revenue));
 
   return (
     <div className="space-y-4">

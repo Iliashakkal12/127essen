@@ -11,22 +11,16 @@ import {
   QrCode,
 } from "lucide-react";
 
-import { getSalonBySlug, salons } from "@/data/salons";
+import { notFound } from "next/navigation";
+
+import { getSalonBySlug } from "@/data/salons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { QrTicket } from "@/components/booking/qr-ticket";
-
-function formatDate(day: string) {
-  const date = new Date("2026-07-01T00:00:00");
-  if (day === "tomorrow") date.setDate(date.getDate() + 1);
-  return date.toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-}
+import { buildBookingReference } from "@/lib/services/booking-service";
+import { formatLongDateFR, isoDateFor } from "@/lib/date";
 
 export default async function BookingConfirmationPage({
   searchParams,
@@ -34,13 +28,16 @@ export default async function BookingConfirmationPage({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
   const params = await searchParams;
-  const salon = getSalonBySlug(params.salon ?? "") ?? salons[0];
+  const salon = getSalonBySlug(params.salon ?? "");
+  if (!salon || salon.services.length === 0) notFound();
+
   const service = salon.services.find((s) => s.id === params.service) ?? salon.services[0];
   const staff = salon.staff.find((s) => s.id === params.staff);
   const time = params.time || "14:00";
   const day = params.day === "tomorrow" ? "tomorrow" : "today";
-  const dateLabel = formatDate(day);
-  const reference = `WG-${service.id.toUpperCase()}-${time.replace(":", "")}`;
+  const dateISO = isoDateFor(day === "tomorrow" ? 1 : 0);
+  const dateLabel = formatLongDateFR(dateISO);
+  const reference = buildBookingReference(service.id, dateISO, time);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6 lg:px-8">
@@ -135,9 +132,7 @@ export default async function BookingConfirmationPage({
 
       <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
         <Button asChild size="lg">
-          <Link href={`/file-attente/${salon.id}`}>
-            Suivre la file d&apos;attente en direct
-          </Link>
+          <Link href={`/salons/${salon.slug}`}>Voir le salon</Link>
         </Button>
         <Button asChild size="lg" variant="outline">
           <Link href="/">

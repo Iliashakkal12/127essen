@@ -1,39 +1,13 @@
-export const platformMetrics = {
-  totalSalons: 214,
-  totalSalonsChangePercent: 18.2,
-  totalBookings: 38460,
-  totalBookingsChangePercent: 24.7,
-  revenueEstimateMAD: 3120000,
-  revenueEstimateChangePercent: 21.3,
-  activeUsers: 15840,
-  activeUsersChangePercent: 32.5,
-  avgQueueTimeSavedMin: 22,
-};
-
-export const platformGrowth = [
-  { month: "Jan", salons: 128, bookings: 18200 },
-  { month: "Fév", salons: 142, bookings: 20100 },
-  { month: "Mar", salons: 156, bookings: 23400 },
-  { month: "Avr", salons: 171, bookings: 27800 },
-  { month: "Mai", salons: 190, bookings: 32600 },
-  { month: "Jun", salons: 214, bookings: 38460 },
-];
-
-export const topSalons = [
-  { name: "Barber Lounge Maarif", neighborhood: "Maarif", bookings: 1240, revenue: 92050, rating: 4.8 },
-  { name: "Ocean Spa Ain Diab", neighborhood: "Ain Diab", bookings: 860, revenue: 128400, rating: 4.9 },
-  { name: "Bourgogne Barber Club", neighborhood: "Bourgogne", bookings: 1085, revenue: 74200, rating: 4.7 },
-  { name: "Gauthier Coiffure Prestige", neighborhood: "Gauthier", bookings: 690, revenue: 105300, rating: 4.6 },
-  { name: "CIL Wellness Spa", neighborhood: "CIL", bookings: 520, revenue: 88900, rating: 4.8 },
-];
-
-export const categoryDistribution = [
-  { category: "Barbershop", count: 78, color: "var(--chart-1)" },
-  { category: "Salon de coiffure", count: 64, color: "var(--chart-2)" },
-  { category: "Institut de beauté", count: 45, color: "var(--chart-3)" },
-  { category: "Spa & bien-être", count: 27, color: "var(--chart-4)" },
-];
-
+/**
+ * Legacy/placeholder monthly SaaS pricing plans.
+ *
+ * These are NOT part of Wagti's active business model (see
+ * src/lib/platform-config.ts for the real per-transaction fee model:
+ * customerFeePerBooking + salonFeePerService with a volume-threshold
+ * relief). They're kept here, clearly labelled as optional/future in the
+ * UI (see marketing/pricing-section.tsx), in case a subscription tier is
+ * introduced later alongside the transaction fees.
+ */
 export const pricingPlans = [
   {
     name: "Essentiel",

@@ -77,7 +77,7 @@ export default function MarketplacePage() {
             Trouvez votre prochain rendez-vous à Casablanca
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            {salons.length} salons partenaires · Barbershops, salons de coiffure, instituts de beauté &amp; spas
+            {`${salons.length} salons partenaires · Barbershops, salons de coiffure, instituts de beauté & spas`}
           </p>
 
           <div className="relative mt-6">

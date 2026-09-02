@@ -46,7 +46,6 @@ export function SiteFooter() {
               <li><Link href="/dashboard/finances" className="hover:text-ink-foreground">Finances</Link></li>
               <li><Link href="/dashboard/employes" className="hover:text-ink-foreground">Employés</Link></li>
               <li><Link href="/#tarifs" className="hover:text-ink-foreground">Tarifs</Link></li>
-              <li><Link href="/admin" className="hover:text-ink-foreground">Démo plateforme (admin)</Link></li>
             </ul>
           </div>
 

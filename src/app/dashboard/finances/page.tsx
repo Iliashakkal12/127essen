@@ -1,3 +1,5 @@
+"use client";
+
 import { CalendarRange, PiggyBank, TrendingUp, Wallet } from "lucide-react";
 
 import { DashboardShell } from "@/components/layout/dashboard-shell";
@@ -7,13 +9,30 @@ import { RevenueByService } from "@/components/finance/revenue-by-service";
 import { RevenueByEmployee } from "@/components/finance/revenue-by-employee";
 import { ExpensesTable } from "@/components/finance/expenses-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { financeSummary, estimatedProfit } from "@/data/finance";
+import { useSalonWorkspace } from "@/lib/salon-context";
+import { getSalonOperations } from "@/lib/mock/salon-operations";
+import { mergeRevenueByEmployee } from "@/lib/mock/salon-overrides";
+import { useSalonExpenses } from "@/lib/mock/finance-store";
 
 export default function FinanceDashboardPage() {
+  const { salon } = useSalonWorkspace();
+  const ops = getSalonOperations(salon);
+  const { financeSummary } = ops;
+  const revenueByEmployee = mergeRevenueByEmployee(ops.revenueByEmployee, salon.staff);
+  const [expenses, setExpenses] = useSalonExpenses(salon.id, ops.expenses);
+
+  // Never a frontend-only number: both totals are derived live from the
+  // actual expenses state, so adding/editing/deleting one recalculates
+  // both immediately.
+  const totalExpensesMonth = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const estimatedProfit =
+    financeSummary.monthlyRevenue - totalExpensesMonth - financeSummary.totalCommissionsMonth;
+
   return (
     <DashboardShell
+      key={salon.id}
       title="Finances"
-      description="Revenus, dépenses et rentabilité de Barber Lounge Maarif"
+      description={`Revenus, dépenses et rentabilité de ${salon.name}`}
     >
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard icon={Wallet} label="Revenu du jour" value={`${financeSummary.dailyRevenue.toLocaleString("fr-FR")} MAD`} changePercent={financeSummary.dailyRevenueChangePercent} tone="primary" />
@@ -28,7 +47,7 @@ export default function FinanceDashboardPage() {
             <CardTitle className="font-display text-lg">Évolution du chiffre d&apos;affaires</CardTitle>
           </CardHeader>
           <CardContent className="pb-5">
-            <RevenueChart />
+            <RevenueChart weekRevenue={ops.weekRevenue} monthRevenue={ops.monthRevenue} />
           </CardContent>
         </Card>
 
@@ -37,7 +56,7 @@ export default function FinanceDashboardPage() {
             <CardTitle className="font-display text-lg">Revenu par service</CardTitle>
           </CardHeader>
           <CardContent className="pb-5">
-            <RevenueByService />
+            <RevenueByService revenueByService={ops.revenueByService} />
           </CardContent>
         </Card>
       </div>
@@ -48,7 +67,7 @@ export default function FinanceDashboardPage() {
             <CardTitle className="font-display text-lg">Revenu &amp; commissions par employé</CardTitle>
           </CardHeader>
           <CardContent className="pb-5">
-            <RevenueByEmployee />
+            <RevenueByEmployee revenueByEmployee={revenueByEmployee} />
           </CardContent>
         </Card>
       </div>
@@ -59,7 +78,7 @@ export default function FinanceDashboardPage() {
             <CardTitle className="font-display text-lg">Dépenses du mois</CardTitle>
           </CardHeader>
           <CardContent className="pb-5">
-            <ExpensesTable />
+            <ExpensesTable expenses={expenses} onChange={setExpenses} />
           </CardContent>
         </Card>
 
@@ -79,7 +98,7 @@ export default function FinanceDashboardPage() {
             <div className="flex justify-between">
               <span className="text-muted-foreground">Dépenses</span>
               <span className="font-medium text-destructive">
-                − {financeSummary.totalExpensesMonth.toLocaleString("fr-FR")} MAD
+                − {totalExpensesMonth.toLocaleString("fr-FR")} MAD
               </span>
             </div>
             <div className="mt-2 flex justify-between border-t border-border pt-3">
@@ -90,7 +109,7 @@ export default function FinanceDashboardPage() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Estimation basée sur les revenus, commissions et dépenses enregistrées ce mois-ci.
+            Estimation basée sur les revenus, commissions et dépenses enregistrées ce mois-ci pour {salon.name}.
           </p>
         </Card>
       </div>

@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Clock, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { salons } from "@/data/salons";
-import type { Service } from "@/lib/types";
+import { useSalonWorkspace } from "@/lib/salon-context";
+import type { Salon, Service } from "@/lib/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,12 +30,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-const salon = salons[0];
-
 const emptyForm = { name: "", category: "", durationMin: "30", price: "" };
 
 export default function ServicesPage() {
-  const [services, setServices] = useState<Service[]>(salon.services);
+  const { salon } = useSalonWorkspace();
+  // Keying by salon.id remounts this subtree (and resets its local state)
+  // whenever the active salon changes, instead of syncing state via effect.
+  return <ServicesWorkspace key={salon.id} salon={salon} />;
+}
+
+function ServicesWorkspace({ salon }: { salon: Salon }) {
+  const { setServices } = useSalonWorkspace();
+  const services = salon.services;
+  const assignableStaff = salon.staff.filter((s) => s.active !== false);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -92,7 +99,7 @@ export default function ServicesPage() {
       setServices((prev) => [
         ...prev,
         {
-          id: `custom-${Date.now()}`,
+          id: `${salon.id}-custom-${Date.now()}`,
           name: form.name,
           category: form.category || "Autre",
           durationMin: Number(form.durationMin) || 30,
@@ -107,7 +114,7 @@ export default function ServicesPage() {
   return (
     <DashboardShell
       title="Services"
-      description="Prestations proposées par Barber Lounge Maarif"
+      description={`Prestations proposées par ${salon.name}`}
     >
       <div className="mb-5 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{services.length} services actifs</p>
@@ -178,7 +185,12 @@ export default function ServicesPage() {
               <div className="space-y-2">
                 <Label>Employés assignés</Label>
                 <div className="space-y-2 rounded-xl border border-border p-3">
-                  {salon.staff.map((member) => (
+                  {assignableStaff.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Aucun employé actif — ajoutez d&apos;abord un employé.
+                    </p>
+                  )}
+                  {assignableStaff.map((member) => (
                     <label key={member.id} className="flex items-center gap-2.5 text-sm">
                       <Checkbox
                         checked={staffIds.includes(member.id)}

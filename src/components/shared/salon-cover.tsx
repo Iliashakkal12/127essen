@@ -26,10 +26,11 @@ export function SalonCover({
       )}
     >
       <div className="bg-noise absolute inset-0 opacity-40" />
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/15 to-transparent" />
       <span className="relative text-4xl drop-shadow-sm" aria-hidden>
         {categoryIcon[category] ?? "✨"}
       </span>
-      <Scissors className="absolute -bottom-3 -right-3 size-16 text-white/20" />
+      <Scissors className="absolute bottom-3 right-3 size-12 text-white/20" />
     </div>
   );
 }

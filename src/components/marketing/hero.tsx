@@ -1,12 +1,16 @@
 import Link from "next/link";
-import { ArrowRight, CalendarCheck, MapPin, Star, Timer } from "lucide-react";
+import { ArrowRight, CalendarCheck, MapPin, Star } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { salons } from "@/data/salons";
 
 export function Hero() {
+  const featuredSalon = salons.find((s) => s.featured) ?? salons[0];
+  const previewServices = featuredSalon.services.filter((s) => s.popular).slice(0, 2);
+
   return (
     <section className="relative overflow-hidden bg-secondary/50">
       <div className="bg-noise absolute inset-0 opacity-[0.35]" />
@@ -21,14 +25,13 @@ export function Hero() {
           </Badge>
 
           <h1 className="font-display text-4xl font-semibold leading-[1.08] tracking-tight text-balance sm:text-5xl lg:text-[3.4rem]">
-            Réservez votre rendez-vous beauté{" "}
-            <span className="text-primary">sans attendre</span>.
+            Votre <span className="text-primary">temps</span> compte.
           </h1>
 
           <p className="mt-5 max-w-xl text-lg text-muted-foreground text-balance">
-            Trouvez un salon près de vous, réservez un créneau ou rejoignez la file
-            d&apos;attente virtuelle par QR code. Arrivez à l&apos;heure exacte,
-            profitez du service, repartez sans perdre une minute.
+            Réservez votre créneau à l&apos;avance et arrivez pile à l&apos;heure.
+            Déjà sur place, sans rendez-vous ? Suivez votre passage en direct,
+            sans faire la queue. Avec Wagti, vous ne perdez plus une minute.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -68,13 +71,14 @@ export function Hero() {
               <div className="flex items-center gap-3">
                 <Avatar className="size-11">
                   <AvatarFallback className="bg-primary text-primary-foreground">
-                    BL
+                    {featuredSalon.name.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-semibold">Barber Lounge Maarif</p>
+                  <p className="text-sm font-semibold">{featuredSalon.name}</p>
                   <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Star className="size-3 fill-accent text-accent" /> 4.8 · Maarif, Casablanca
+                    <Star className="size-3 fill-accent text-accent" /> {featuredSalon.rating} ·{" "}
+                    {featuredSalon.neighborhood}, {featuredSalon.city}
                   </p>
                 </div>
               </div>
@@ -82,35 +86,23 @@ export function Hero() {
             </div>
 
             <div className="mt-5 space-y-2.5">
-              {[
-                { service: "Dégradé + barbe", time: "Aujourd'hui, 14:00", price: "130 MAD" },
-                { service: "Coupe homme classique", time: "Aujourd'hui, 16:30", price: "80 MAD" },
-              ].map((slot) => (
+              {previewServices.map((service) => (
                 <div
-                  key={slot.service}
+                  key={service.id}
                   className="flex items-center justify-between rounded-xl border border-border bg-secondary/50 px-3.5 py-3"
                 >
                   <div>
-                    <p className="text-sm font-medium">{slot.service}</p>
-                    <p className="text-xs text-muted-foreground">{slot.time}</p>
+                    <p className="text-sm font-medium">{service.name}</p>
+                    <p className="text-xs text-muted-foreground">{service.durationMin} min</p>
                   </div>
-                  <p className="text-sm font-semibold">{slot.price}</p>
+                  <p className="text-sm font-semibold">{service.price} MAD</p>
                 </div>
               ))}
             </div>
 
             <Button className="mt-5 w-full" asChild>
-              <Link href="/salons/barber-lounge-maarif">Choisir ce créneau</Link>
+              <Link href={`/salons/${featuredSalon.slug}`}>Voir ce salon</Link>
             </Button>
-          </Card>
-
-          <Card className="absolute -bottom-8 -left-8 hidden w-52 gap-2 p-4 shadow-xl sm:flex sm:flex-col">
-            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-              <Timer className="size-3.5 text-primary" />
-              File d&apos;attente virtuelle
-            </div>
-            <p className="font-display text-2xl font-semibold">Ticket A-014</p>
-            <p className="text-xs text-muted-foreground">0 personne devant vous · Prêt</p>
           </Card>
         </div>
       </div>

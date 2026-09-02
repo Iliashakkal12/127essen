@@ -10,7 +10,7 @@ import {
   YAxis,
 } from "recharts";
 
-import { weekRevenue, monthRevenue } from "@/data/finance";
+import type { MonthRevenuePoint, WeekRevenuePoint } from "@/lib/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function CustomTooltip({
@@ -31,7 +31,13 @@ function CustomTooltip({
   );
 }
 
-export function RevenueChart() {
+export function RevenueChart({
+  weekRevenue,
+  monthRevenue,
+}: {
+  weekRevenue: WeekRevenuePoint[];
+  monthRevenue: MonthRevenuePoint[];
+}) {
   return (
     <Tabs defaultValue="week">
       <TabsList>
