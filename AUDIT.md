@@ -591,6 +591,21 @@ and every one of these modules (`salon-overrides.ts`, `finance-store.ts`,
 *behind* `usePersistedList`/the store functions, not to any component
 that calls them.
 
+## ⚠️ Active flag: `/admin` login is temporarily disabled
+
+As of 2026-09-02, `src/proxy.ts` no longer enforces the `WAGTI_ADMIN_CODE`
+session check on `/admin/**` — by explicit request, so the owner can check
+the dashboard without re-logging in on every new preview URL during active
+solo development. `/admin` is still not linked anywhere in the public
+site, but there is no lock on the door: anyone who obtains the URL can
+open it while this is active.
+
+**This must be re-enabled before the app is shared with anyone else or
+touches real data.** The fix is a one-line swap in `src/proxy.ts` (restore
+the `proxy` export to what `REAL_MIDDLEWARE` already contains in that
+file — the login page, session-cookie signing, and API routes were left
+fully intact, nothing needs rebuilding).
+
 ## 9. Part 2 — transition to a real V1
 
 Not started as of this pass — see the conversation for the proposed
