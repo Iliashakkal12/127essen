@@ -1,4 +1,4 @@
-import { revenueByEmployee } from "@/data/finance";
+import type { RevenueByEmployeeEntry } from "@/lib/types";
 import {
   Table,
   TableBody,
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-export function RevenueByEmployee() {
+export function RevenueByEmployee({ revenueByEmployee }: { revenueByEmployee: RevenueByEmployeeEntry[] }) {
   return (
     <Table>
       <TableHeader>
@@ -23,7 +23,7 @@ export function RevenueByEmployee() {
       </TableHeader>
       <TableBody>
         {revenueByEmployee.map((e) => (
-          <TableRow key={e.name}>
+          <TableRow key={e.id}>
             <TableCell>
               <div className="flex items-center gap-2.5">
                 <Avatar className="size-8">

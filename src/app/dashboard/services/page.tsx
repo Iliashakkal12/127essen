@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Clock, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { salons } from "@/data/salons";
-import type { Service } from "@/lib/types";
+import { useSalonWorkspace } from "@/lib/salon-context";
+import type { Salon, Service } from "@/lib/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,11 +30,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-const salon = salons[0];
-
 const emptyForm = { name: "", category: "", durationMin: "30", price: "" };
 
 export default function ServicesPage() {
+  const { salon } = useSalonWorkspace();
+  // Keying by salon.id remounts this subtree (and resets its local state)
+  // whenever the active salon changes, instead of syncing state via effect.
+  return <ServicesWorkspace key={salon.id} salon={salon} />;
+}
+
+function ServicesWorkspace({ salon }: { salon: Salon }) {
   const [services, setServices] = useState<Service[]>(salon.services);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -107,7 +112,7 @@ export default function ServicesPage() {
   return (
     <DashboardShell
       title="Services"
-      description="Prestations proposées par Barber Lounge Maarif"
+      description={`Prestations proposées par ${salon.name}`}
     >
       <div className="mb-5 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{services.length} services actifs</p>

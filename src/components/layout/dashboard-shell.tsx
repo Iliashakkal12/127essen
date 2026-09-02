@@ -15,9 +15,11 @@ import {
   LogOut,
   Settings,
   Scissors,
+  Check,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useSalonWorkspace } from "@/lib/salon-context";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -37,8 +39,66 @@ const navItems = [
   { href: "/dashboard/services", label: "Services", icon: ListChecks },
 ];
 
+function SalonSwitcher({ compact = false }: { compact?: boolean }) {
+  const { salon, salons, setSalonId } = useSalonWorkspace();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className={cn(
+            "flex items-center gap-2 rounded-full border py-1 pl-1 pr-2.5 text-left transition-colors",
+            compact
+              ? "border-sidebar-border hover:bg-sidebar-accent/60"
+              : "border-border hover:bg-secondary"
+          )}
+        >
+          <Avatar className="size-7">
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+              {salon.name.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <span className={cn("min-w-0 flex-1", compact ? "hidden sm:block" : "hidden sm:inline")}>
+            <span className="block truncate text-sm font-medium">{salon.name}</span>
+          </span>
+          <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-72">
+        <div className="px-2 py-1.5">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Gérer un établissement
+          </p>
+        </div>
+        <DropdownMenuSeparator />
+        {salons.map((s) => (
+          <DropdownMenuItem
+            key={s.id}
+            onClick={() => setSalonId(s.id)}
+            className="flex items-center gap-2.5"
+          >
+            <Avatar className="size-7">
+              <AvatarFallback className="bg-secondary text-xs">
+                {s.name.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{s.name}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {s.neighborhood}, {s.city}
+              </p>
+            </div>
+            {s.id === salon.id && <Check className="size-4 shrink-0 text-primary" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { salon } = useSalonWorkspace();
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
@@ -46,10 +106,14 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <span className="flex size-9 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
           <Scissors className="size-4.5" />
         </span>
-        <div>
-          <p className="font-display text-base font-semibold leading-tight">Barber Lounge</p>
-          <p className="text-xs text-sidebar-foreground/60">Maarif, Casablanca</p>
+        <div className="min-w-0">
+          <p className="truncate font-display text-base font-semibold leading-tight">{salon.name}</p>
+          <p className="truncate text-xs text-sidebar-foreground/60">{salon.neighborhood}, {salon.city}</p>
         </div>
+      </div>
+
+      <div className="px-3 pb-3">
+        <SalonSwitcher compact />
       </div>
 
       <nav className="flex-1 space-y-1 px-3">
@@ -97,6 +161,7 @@ export function DashboardShell({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const { salon } = useSalonWorkspace();
 
   return (
     <div className="flex min-h-screen bg-secondary/40">
@@ -133,6 +198,10 @@ export function DashboardShell({
             )}
           </div>
 
+          <div className="hidden lg:block">
+            <SalonSwitcher />
+          </div>
+
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="size-4.5" />
             <span className="absolute right-2 top-2 size-1.5 rounded-full bg-destructive" />
@@ -143,17 +212,16 @@ export function DashboardShell({
               <button className="flex items-center gap-2 rounded-full border border-border py-1 pl-1 pr-2.5 hover:bg-secondary">
                 <Avatar className="size-7">
                   <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                    BL
+                    {salon.name.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden text-sm font-medium sm:inline">Barber Lounge</span>
                 <ChevronDown className="size-3.5 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="px-2 py-1.5">
-                <p className="text-sm font-medium">Barber Lounge Maarif</p>
-                <p className="text-xs text-muted-foreground">proprietaire@barberlounge.ma</p>
+                <p className="text-sm font-medium">{salon.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{salon.address}</p>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem>

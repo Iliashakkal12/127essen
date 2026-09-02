@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { CalendarClock, Scissors, User } from "lucide-react";
 
 import type { Salon } from "@/lib/types";
@@ -7,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { TimeSlots } from "@/components/salon/time-slots";
+import { getAvailableSlots, hasAnyAvailability } from "@/lib/services/booking-service";
+import { isoDateFor, nowTimeHHmm } from "@/lib/date";
 
 export function BookingWidget({
   salon,
@@ -29,6 +32,18 @@ export function BookingWidget({
 }) {
   const service = salon.services.find((s) => s.id === serviceId) ?? null;
   const staff = staffId ? salon.staff.find((s) => s.id === staffId) ?? null : null;
+
+  const slots = useMemo(() => {
+    if (!service) return [];
+    return getAvailableSlots({
+      salon,
+      service,
+      staffId,
+      date: isoDateFor(day === "tomorrow" ? 1 : 0),
+      nowTime: day === "today" ? nowTimeHHmm() : undefined,
+    });
+  }, [salon, service, staffId, day]);
+
   const canConfirm = Boolean(service && time);
 
   return (
@@ -82,7 +97,18 @@ export function BookingWidget({
               </button>
             </div>
           </div>
-          <TimeSlots selected={time} onSelect={onTimeChange} />
+          {service ? (
+            <TimeSlots slots={slots} selected={time} onSelect={onTimeChange} />
+          ) : (
+            <p className="rounded-xl border border-dashed border-border py-6 text-center text-sm text-muted-foreground">
+              Sélectionnez une prestation pour voir les créneaux disponibles.
+            </p>
+          )}
+          {service && !hasAnyAvailability(slots) && slots.length > 0 && (
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              Complet pour {day === "today" ? "aujourd'hui" : "demain"}, essayez un autre jour.
+            </p>
+          )}
         </div>
 
         <Separator />

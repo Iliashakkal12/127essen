@@ -2,10 +2,8 @@
 
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
-import { categoryDistribution } from "@/data/admin";
-
-export function CategoryDonut() {
-  const total = categoryDistribution.reduce((s, c) => s + c.count, 0);
+export function CategoryDonut({ data }: { data: { category: string; count: number; color: string }[] }) {
+  const total = data.reduce((s, c) => s + c.count, 0) || 1;
 
   return (
     <div className="flex items-center gap-6">
@@ -13,7 +11,7 @@ export function CategoryDonut() {
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={categoryDistribution}
+              data={data}
               dataKey="count"
               nameKey="category"
               innerRadius={52}
@@ -21,7 +19,7 @@ export function CategoryDonut() {
               paddingAngle={3}
               strokeWidth={0}
             >
-              {categoryDistribution.map((entry) => (
+              {data.map((entry) => (
                 <Cell key={entry.category} fill={entry.color} />
               ))}
             </Pie>
@@ -37,7 +35,7 @@ export function CategoryDonut() {
         </ResponsiveContainer>
       </div>
       <div className="space-y-2.5">
-        {categoryDistribution.map((c) => (
+        {data.map((c) => (
           <div key={c.category} className="flex items-center gap-2 text-sm">
             <span className="size-2.5 rounded-full" style={{ backgroundColor: c.color }} />
             <span className="text-muted-foreground">{c.category}</span>

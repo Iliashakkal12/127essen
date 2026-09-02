@@ -1,3 +1,22 @@
+/**
+ * Authorization roles (conceptual — this prototype has no real auth backend,
+ * see AUDIT.md). Kept here so the separation the product spec requires is
+ * explicit in the type system rather than implied by which routes a
+ * component happens to live under.
+ *
+ * - CUSTOMER: browse, book, view own appointment, join a queue.
+ * - SALON_OWNER / SALON_MANAGER / STAFF: manage one or more salons they are
+ *   a member of (appointments, queue, employees, services, finances).
+ * - PLATFORM_OWNER: Wagti's own operator — sees every salon and
+ *   platform-wide metrics. Never implied by a salon role.
+ */
+export type UserRole =
+  | "CUSTOMER"
+  | "STAFF"
+  | "SALON_MANAGER"
+  | "SALON_OWNER"
+  | "PLATFORM_OWNER";
+
 export type SalonCategory =
   | "Barbershop"
   | "Salon de coiffure"
@@ -111,6 +130,69 @@ export interface QueueTicket {
   estimatedWaitMin: number;
   peopleAhead: number;
   status: QueueStatus;
+}
+
+export interface WeekRevenuePoint {
+  day: string;
+  label: string;
+  revenue: number;
+}
+
+export interface MonthRevenuePoint {
+  label: string;
+  revenue: number;
+}
+
+export interface RevenueByServiceEntry {
+  service: string;
+  revenue: number;
+  count: number;
+}
+
+export interface RevenueByEmployeeEntry {
+  id: string;
+  name: string;
+  initials: string;
+  revenue: number;
+  commissionPercent: number;
+  commissionOwed: number;
+  clients: number;
+}
+
+export interface Expense {
+  id: string;
+  label: string;
+  category: string;
+  amount: number;
+  date: string;
+}
+
+export interface FinanceSummary {
+  dailyRevenue: number;
+  dailyRevenueChangePercent: number;
+  weeklyRevenue: number;
+  weeklyRevenueChangePercent: number;
+  monthlyRevenue: number;
+  monthlyRevenueChangePercent: number;
+  totalExpensesMonth: number;
+  totalCommissionsMonth: number;
+  completedServicesMonth: number;
+}
+
+/** Everything the salon workspace ("Espace salon") needs for one salon, generated deterministically per salon id. See src/lib/mock/salon-operations.ts */
+export interface SalonOperations {
+  salonId: string;
+  todayAppointments: Appointment[];
+  queueTickets: QueueTicket[];
+  weekRevenue: WeekRevenuePoint[];
+  monthRevenue: MonthRevenuePoint[];
+  revenueByService: RevenueByServiceEntry[];
+  revenueByEmployee: RevenueByEmployeeEntry[];
+  expenses: Expense[];
+  financeSummary: FinanceSummary;
+  estimatedProfit: number;
+  todayAppointmentsChangePercent: number;
+  walkInsChangePercent: number;
 }
 
 export interface Testimonial {

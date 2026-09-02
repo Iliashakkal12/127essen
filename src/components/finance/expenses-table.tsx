@@ -1,4 +1,4 @@
-import { expenses } from "@/data/finance";
+import type { Expense } from "@/lib/types";
 import {
   Table,
   TableBody,
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
-export function ExpensesTable() {
+export function ExpensesTable({ expenses }: { expenses: Expense[] }) {
   return (
     <Table>
       <TableHeader>

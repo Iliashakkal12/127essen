@@ -1,34 +1,36 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-const ALL_SLOTS = [
-  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-  "12:00", "12:30", "14:00", "14:30", "15:00", "15:30",
-  "16:00", "16:30", "17:00", "17:30", "18:00", "18:30",
-];
-
-const UNAVAILABLE_INDEXES = new Set([2, 5, 8, 9, 13, 16]);
+import type { TimeSlot } from "@/lib/types";
 
 export function TimeSlots({
+  slots,
   selected,
   onSelect,
 }: {
+  slots: TimeSlot[];
   selected: string | null;
   onSelect: (time: string) => void;
 }) {
+  if (slots.length === 0) {
+    return (
+      <p className="rounded-xl border border-dashed border-border py-6 text-center text-sm text-muted-foreground">
+        Aucun créneau disponible pour cette sélection.
+      </p>
+    );
+  }
+
   return (
     <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 lg:grid-cols-6">
-      {ALL_SLOTS.map((time, index) => {
-        const disabled = UNAVAILABLE_INDEXES.has(index);
+      {slots.map(({ time, available }) => {
         const active = selected === time;
         return (
           <Button
             key={time}
             type="button"
-            disabled={disabled}
+            disabled={!available}
             variant={active ? "default" : "outline"}
             size="sm"
-            className={cn("font-normal", disabled && "line-through")}
+            className={cn("font-normal", !available && "line-through")}
             onClick={() => onSelect(time)}
           >
             {time}

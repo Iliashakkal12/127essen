@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Plus, Star, TrendingUp, Users, Wallet } from "lucide-react";
 
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { salons } from "@/data/salons";
+import { useSalonWorkspace } from "@/lib/salon-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -23,16 +23,16 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-const salon = salons[0];
-
 export default function EmployeesPage() {
+  const { salon } = useSalonWorkspace();
   const [open, setOpen] = useState(false);
-  const maxRevenue = Math.max(...salon.staff.map((s) => s.revenueGeneratedMonth));
+  const maxRevenue = Math.max(1, ...salon.staff.map((s) => s.revenueGeneratedMonth));
 
   return (
     <DashboardShell
+      key={salon.id}
       title="Employés"
-      description="Équipe, performance et commissions de Barber Lounge Maarif"
+      description={`Équipe, performance et commissions de ${salon.name}`}
     >
       <div className="mb-5 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">

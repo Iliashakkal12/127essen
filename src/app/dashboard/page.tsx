@@ -1,3 +1,5 @@
+"use client";
+
 import { CalendarDays, TrendingUp, UserPlus, Wallet, XCircle } from "lucide-react";
 
 import { DashboardShell } from "@/components/layout/dashboard-shell";
@@ -6,9 +8,15 @@ import { PlanningView } from "@/components/dashboard/planning-view";
 import { AppointmentsTable } from "@/components/dashboard/appointments-table";
 import { QueueManagement } from "@/components/dashboard/queue-management";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { todayAppointments, queueTickets } from "@/data/appointments";
+import { useSalonWorkspace } from "@/lib/salon-context";
+import { getSalonOperations } from "@/lib/mock/salon-operations";
+import { formatLongDateFR, todayISO } from "@/lib/date";
 
 export default function DashboardOverviewPage() {
+  const { salon } = useSalonWorkspace();
+  const ops = getSalonOperations(salon);
+  const { todayAppointments, queueTickets } = ops;
+
   const walkIns = todayAppointments.filter((a) => a.type === "walk-in").length;
   const cancellations = todayAppointments.filter((a) => a.status === "annulée").length;
   const revenueToday = todayAppointments
@@ -17,15 +25,16 @@ export default function DashboardOverviewPage() {
 
   return (
     <DashboardShell
+      key={salon.id}
       title="Vue d'ensemble"
-      description="Barber Lounge Maarif · Mercredi 1 juillet 2026"
+      description={`${salon.name} · ${formatLongDateFR(todayISO())}`}
     >
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <StatCard icon={CalendarDays} label="Rendez-vous aujourd'hui" value={String(todayAppointments.length)} changePercent={9} tone="primary" />
-        <StatCard icon={UserPlus} label="Walk-ins" value={String(walkIns)} changePercent={4} />
-        <StatCard icon={Wallet} label="Revenu du jour" value={`${revenueToday} MAD`} changePercent={12} tone="primary" />
-        <StatCard icon={XCircle} label="Annulations" value={String(cancellations)} changePercent={-2} tone="destructive" />
-        <StatCard icon={TrendingUp} label="File d'attente" value={String(queueTickets.length)} tone="warning" />
+        <StatCard icon={CalendarDays} label="Rendez-vous aujourd'hui" value={String(todayAppointments.length)} changePercent={ops.todayAppointmentsChangePercent} tone="primary" />
+        <StatCard icon={UserPlus} label="Walk-ins" value={String(walkIns)} changePercent={ops.walkInsChangePercent} />
+        <StatCard icon={Wallet} label="Revenu du jour" value={`${revenueToday} MAD`} changePercent={ops.financeSummary.dailyRevenueChangePercent} tone="primary" />
+        <StatCard icon={XCircle} label="Annulations" value={String(cancellations)} changePercent={-cancellations} tone="destructive" />
+        <StatCard icon={TrendingUp} label="File d'attente" value={String(queueTickets.filter((t) => t.status !== "terminé").length)} tone="warning" />
       </div>
 
       <div className="mt-6">
@@ -34,7 +43,13 @@ export default function DashboardOverviewPage() {
             <CardTitle className="font-display text-lg">Planning du jour</CardTitle>
           </CardHeader>
           <CardContent className="pb-5">
-            <PlanningView appointments={todayAppointments} />
+            {todayAppointments.length > 0 ? (
+              <PlanningView appointments={todayAppointments} />
+            ) : (
+              <p className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
+                Aucun rendez-vous prévu aujourd&apos;hui pour {salon.name}.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -45,7 +60,11 @@ export default function DashboardOverviewPage() {
             <CardTitle className="font-display text-lg">Rendez-vous &amp; walk-ins</CardTitle>
           </CardHeader>
           <CardContent className="pb-5">
-            <AppointmentsTable initialAppointments={todayAppointments} />
+            {todayAppointments.length > 0 ? (
+              <AppointmentsTable initialAppointments={todayAppointments} />
+            ) : (
+              <p className="py-8 text-center text-sm text-muted-foreground">Aucun rendez-vous.</p>
+            )}
           </CardContent>
         </Card>
 

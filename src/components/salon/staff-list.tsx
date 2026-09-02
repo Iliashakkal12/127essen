@@ -14,6 +14,14 @@ export function StaffList({
   selectedId: string | null;
   onSelect: (id: string | null) => void;
 }) {
+  if (staff.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
+        Aucun employé disponible pour cette prestation pour le moment.
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <Card
