@@ -13,10 +13,13 @@ function timeToRow(time: string) {
 }
 
 const statusStyles: Record<Appointment["status"], string> = {
-  "confirmée": "bg-primary/10 border-primary/40",
   "en attente": "bg-warning/15 border-warning/50",
+  "confirmée": "bg-primary/10 border-primary/40",
+  "arrivée": "bg-accent/20 border-accent/50",
+  "en cours": "bg-warning/20 border-warning/60",
   "terminée": "bg-success/15 border-success/50",
   "annulée": "bg-muted border-border line-through opacity-60",
+  "absence": "bg-destructive/10 border-destructive/40 line-through opacity-70",
 };
 
 export function PlanningView({ appointments }: { appointments: Appointment[] }) {

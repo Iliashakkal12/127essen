@@ -477,3 +477,126 @@ Verified manually (dev server) for this audit:
   see `.env.example` and README's "Environment variables" section) — must
   be set in Vercel's Project Settings before the first deploy that needs
   `/admin` to work; the rest of the app functions without it.
+
+---
+
+## 8. Round 2 — Mockup V2 corrections (post-launch testing)
+
+A second pass, driven by issues found actually clicking through the
+deployed Mockup V2 rather than by code review. Each item below was
+reproduced first, then fixed at the root cause — not patched at the
+symptom.
+
+1. **Queue teaser on the homepage read as a normal marketplace feature.**
+   The hero section had a floating "Déjà sur place ?" card sitting right
+   next to the sample salon card — still visually implying the queue is
+   part of the default browsing experience. Removed entirely from the
+   homepage; the queue is now only ever introduced on a salon's own page.
+   `src/components/marketing/hero.tsx`.
+2. **Homepage value proposition was generic booking-app copy.** Rewritten
+   around Wagti's actual differentiator — "Votre temps compte", covering
+   both "book ahead" and "skip the wait if you're already there" — instead
+   of a one-line description of what any booking platform does.
+3. **Salon page image/badge collision.** Root-caused precisely: the
+   overlapping info card relied on CSS stacking order matching DOM order,
+   but had no explicit `z-index`, so on some viewports the cover image's
+   decorative icon could paint over the category/availability badges.
+   Fixed by giving the info card an explicit stacking context
+   (`relative z-10`) instead of guessing at margins, and by shrinking/
+   re-insetting the decorative icon so it no longer overflows the cover's
+   bounds. `salon-header.tsx`, `salon-cover.tsx`.
+4. **Sticky booking bar intermittently covered the queue CTA while
+   scrolling.** Root-caused via actual DOM/CSS measurement (see below),
+   not guesswork: `position: sticky` promotes an element into its own
+   stacking context that paints above plain static siblings regardless of
+   DOM order, and CSS grid's default `align-items: stretch` was giving the
+   sticky widget's containing block far more scroll "runway" than its own
+   content needed. Fixing only the stretch (`self-start`) shrank the
+   overlap window but didn't eliminate it — the two elements could still
+   occupy the same screen region for part of the scroll range. The actual
+   fix: moved the "Déjà sur place" card out of the sticky column entirely
+   into its own full-width block below the two-column grid, so it never
+   shares a containing block with anything sticky. Verified with a
+   Playwright script that swept eleven scroll positions and checked real
+   hit-testing (`document.elementFromPoint`), not just visual inspection.
+   `salon-detail-client.tsx`.
+5. **"8 salons partenaires" rendered as "8salons partenaires".** Root
+   cause confirmed by diffing actual rendered HTML: React inserts an
+   `<!-- -->` hydration marker between a JSX expression and adjacent
+   text, and in this specific case (text spanning to a line break before
+   the closing tag) the leading space was dropped by JSX's whitespace
+   handling. Fixed by folding the whole phrase into one template-literal
+   expression, which is immune to this class of bug. Then swept every
+   other page's rendered HTML for the same `<!-- -->`-adjacent-to-a-
+   non-space-character pattern — no other instance found; everything else
+   was either a correct explicit space or a correct no-space case (e.g.
+   `40%`, `salon` + `s`).
+6. **Appointment status had one ambiguous action instead of explicit
+   per-state verbs.** `AppointmentStatus` extended to a full lifecycle
+   (`en attente → confirmée → arrivée → en cours → terminée`, plus
+   `annulée`/`absence` as terminal branches), each with its own obvious
+   button(s) in `appointments-table.tsx` instead of one generic control.
+7. **QR walk-in flow auto-created a ticket instead of asking the salon.**
+   This was the most substantial change. Redesigned `/file-attente/[id]`
+   so selecting a service **submits a request**, not a ticket; the salon
+   sees it live in a new "Demandes sans rendez-vous" panel
+   (`walkin-requests-panel.tsx`) and must explicitly Confirm or Refuse.
+   Confirming creates a real walk-in appointment in the salon's
+   operational appointments list and turns the customer's waiting screen
+   into the (unchanged, per the brief) queue ticket view — automatically,
+   without the customer refreshing.
+   - Mechanism: `src/lib/mock/walkin-store.ts` uses `localStorage` plus
+     the native `storage` event, which fires in *other* tabs on the same
+     origin when localStorage changes. This is genuinely live — verified
+     with a two-tab Playwright test (customer tab + salon dashboard tab,
+     shared browser context) — not a simulation dressed up as one. The
+     one honest limit, stated in the module's own doc comment: it
+     synchronizes tabs on the *same browser*, not a customer's phone with
+     a salon's separate device. That needs Part 2's real backend
+     (WebSocket/polling against a shared database) — the call sites
+     (`submit`, `respond`) don't change when that lands, only what's
+     behind them.
+8. **Adding an employee did nothing — the dialog's "Ajouter" button
+   just closed itself.** This was a real, confirmed bug: the form had no
+   handler wiring it to any state at all. Fixed properly rather than
+   patched: built a small persistence layer
+   (`src/lib/hooks/use-persisted-list.ts` + `src/lib/mock/salon-overrides.ts`)
+   that overlays localStorage-backed employee/service edits onto the seed
+   salon data, wired into `useSalonWorkspace()` so every dashboard page —
+   and the customer-facing salon page, via the same overlay — sees the
+   same live data. Verified end-to-end with Playwright: add an employee,
+   hard-reload, still there; the employee also appears (once assigned to
+   a service) as a selectable professional in the customer booking flow,
+   in the same browser. Employees are deactivated (`active: false`),
+   never destructively deleted, so historical appointments and finance
+   rows keep their staff reference — matching the "prefer ACTIVE/INACTIVE"
+   requirement.
+9. **Expenses were read-only; the estimated profit was a static seed-time
+   number.** Added full add/edit/delete for expenses
+   (`expenses-table.tsx` + `src/lib/mock/finance-store.ts`, same
+   persistence layer as employees/services). `totalExpensesMonth` and
+   `estimatedProfit` are now computed live from the actual expenses state
+   on every render — verified with Playwright: adding a 500 MAD expense
+   moved both numbers by exactly 500, and the new expense survived a hard
+   reload.
+
+**What "persists" means right now, precisely:** everything above that
+needs to survive a refresh does, today, via `localStorage` — genuinely
+read back and re-rendered, not a display-only illusion. What it does
+*not* do is sync across two different browsers or devices, which is an
+honest architectural limit of client-side storage, not a shortcut taken to
+look finished. That gap is exactly what Part 2's real database closes,
+and every one of these modules (`salon-overrides.ts`, `finance-store.ts`,
+`walkin-store.ts`) was written so that closing it is a change to what's
+*behind* `usePersistedList`/the store functions, not to any component
+that calls them.
+
+## 9. Part 2 — transition to a real V1
+
+Not started as of this pass — see the conversation for the proposed
+technical foundation (Next.js + PostgreSQL + Prisma/Drizzle + real auth)
+and the one decision that requires the product owner: which hosted
+Postgres to provision (e.g. Vercel Postgres/Neon, or Supabase) before a
+real persistence layer, multi-tenant data isolation, real availability
+engine, and platform-wide auth/roles can be built. This section will be
+filled in once that work begins.

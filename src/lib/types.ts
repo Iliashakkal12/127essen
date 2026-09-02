@@ -46,6 +46,8 @@ export interface Staff {
   clientsServedMonth: number;
   revenueGeneratedMonth: number;
   serviceIds: string[];
+  /** Undefined is treated as active, for backward compatibility with seed data. Inactive staff are hidden from NEW bookings but kept for historical appointments/finance. */
+  active?: boolean;
 }
 
 export interface Service {
@@ -100,11 +102,26 @@ export interface Salon {
   reviews: Review[];
 }
 
+/**
+ * Full appointment lifecycle. Each state has exactly one or two obvious
+ * next actions in the salon dashboard (appointments-table.tsx) — the
+ * point is that staff never see one ambiguous "manage" button, they see
+ * the specific verb for what happens next.
+ *
+ *   en attente  -> [Confirmer] [Annuler]
+ *   confirmée   -> [Marquer comme arrivé] [Annuler]
+ *   arrivée     -> [Démarrer]
+ *   en cours    -> [Terminer]
+ *   terminée / annulée / absence -> terminal, badge only
+ */
 export type AppointmentStatus =
-  | "confirmée"
   | "en attente"
+  | "confirmée"
+  | "arrivée"
+  | "en cours"
   | "terminée"
-  | "annulée";
+  | "annulée"
+  | "absence";
 
 export interface Appointment {
   id: string;
@@ -193,6 +210,27 @@ export interface SalonOperations {
   estimatedProfit: number;
   todayAppointmentsChangePercent: number;
   walkInsChangePercent: number;
+}
+
+export type WalkInRequestStatus = "pending" | "confirmed" | "refused";
+
+/**
+ * A customer's QR walk-in request, distinct from a QueueTicket: this is
+ * the "may I be seen without an appointment?" ask, which the salon must
+ * explicitly accept before it becomes a real queue ticket / appointment.
+ * See src/lib/mock/walkin-store.ts.
+ */
+export interface WalkInRequest {
+  id: string;
+  salonId: string;
+  serviceId: string;
+  serviceName: string;
+  staffId: string | null;
+  staffName: string | null;
+  clientName: string;
+  requestedAt: string;
+  status: WalkInRequestStatus;
+  ticketNumber?: string;
 }
 
 export interface Testimonial {

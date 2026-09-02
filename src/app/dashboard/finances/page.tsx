@@ -11,11 +11,22 @@ import { ExpensesTable } from "@/components/finance/expenses-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSalonWorkspace } from "@/lib/salon-context";
 import { getSalonOperations } from "@/lib/mock/salon-operations";
+import { mergeRevenueByEmployee } from "@/lib/mock/salon-overrides";
+import { useSalonExpenses } from "@/lib/mock/finance-store";
 
 export default function FinanceDashboardPage() {
   const { salon } = useSalonWorkspace();
   const ops = getSalonOperations(salon);
-  const { financeSummary, estimatedProfit } = ops;
+  const { financeSummary } = ops;
+  const revenueByEmployee = mergeRevenueByEmployee(ops.revenueByEmployee, salon.staff);
+  const [expenses, setExpenses] = useSalonExpenses(salon.id, ops.expenses);
+
+  // Never a frontend-only number: both totals are derived live from the
+  // actual expenses state, so adding/editing/deleting one recalculates
+  // both immediately.
+  const totalExpensesMonth = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const estimatedProfit =
+    financeSummary.monthlyRevenue - totalExpensesMonth - financeSummary.totalCommissionsMonth;
 
   return (
     <DashboardShell
@@ -56,7 +67,7 @@ export default function FinanceDashboardPage() {
             <CardTitle className="font-display text-lg">Revenu &amp; commissions par employé</CardTitle>
           </CardHeader>
           <CardContent className="pb-5">
-            <RevenueByEmployee revenueByEmployee={ops.revenueByEmployee} />
+            <RevenueByEmployee revenueByEmployee={revenueByEmployee} />
           </CardContent>
         </Card>
       </div>
@@ -67,7 +78,7 @@ export default function FinanceDashboardPage() {
             <CardTitle className="font-display text-lg">Dépenses du mois</CardTitle>
           </CardHeader>
           <CardContent className="pb-5">
-            <ExpensesTable expenses={ops.expenses} />
+            <ExpensesTable expenses={expenses} onChange={setExpenses} />
           </CardContent>
         </Card>
 
@@ -87,7 +98,7 @@ export default function FinanceDashboardPage() {
             <div className="flex justify-between">
               <span className="text-muted-foreground">Dépenses</span>
               <span className="font-medium text-destructive">
-                − {financeSummary.totalExpensesMonth.toLocaleString("fr-FR")} MAD
+                − {totalExpensesMonth.toLocaleString("fr-FR")} MAD
               </span>
             </div>
             <div className="mt-2 flex justify-between border-t border-border pt-3">

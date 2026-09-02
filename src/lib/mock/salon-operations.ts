@@ -80,10 +80,24 @@ function weightedStatus(
   nowMinutes: number,
   rand: () => number
 ): AppointmentStatus {
-  if (rand() < 0.08) return "annulée";
-  if (slotMinutes + 30 < nowMinutes) return "terminée";
-  if (slotMinutes <= nowMinutes) return rand() < 0.7 ? "confirmée" : "terminée";
-  return rand() < 0.75 ? "confirmée" : "en attente";
+  if (rand() < 0.06) return "annulée";
+
+  const minutesFromNow = slotMinutes - nowMinutes;
+
+  if (minutesFromNow < -30) {
+    // Well in the past: almost always wrapped up, occasionally a no-show.
+    return rand() < 0.92 ? "terminée" : "absence";
+  }
+  if (minutesFromNow < 0) {
+    // Should have started a little while ago.
+    return rand() < 0.6 ? "en cours" : "terminée";
+  }
+  if (minutesFromNow < 15) {
+    // Right around now: client may already be checked in.
+    return rand() < 0.5 ? "arrivée" : "confirmée";
+  }
+  // Later today: mostly confirmed, some still awaiting confirmation.
+  return rand() < 0.8 ? "confirmée" : "en attente";
 }
 
 function generateTodayAppointments(salon: Salon, rand: () => number): Appointment[] {

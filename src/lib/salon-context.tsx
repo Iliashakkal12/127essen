@@ -27,15 +27,19 @@ import {
 } from "react";
 
 import { salons } from "@/data/salons";
-import type { Salon } from "@/lib/types";
+import type { Salon, Service, Staff } from "@/lib/types";
+import { useSalonOverrides } from "@/lib/mock/salon-overrides";
 
 const STORAGE_KEY = "wagti.dashboard.activeSalonId";
 
 interface SalonWorkspaceContextValue {
+  /** The active salon with any locally-persisted employee/service edits already merged in. */
   salon: Salon;
   salonId: string;
   salons: Salon[];
   setSalonId: (id: string) => void;
+  setStaff: (updater: Staff[] | ((prev: Staff[]) => Staff[])) => void;
+  setServices: (updater: Service[] | ((prev: Service[]) => Service[])) => void;
 }
 
 const SalonWorkspaceContext = createContext<SalonWorkspaceContextValue | null>(null);
@@ -68,14 +72,16 @@ export function SalonWorkspaceProvider({ children }: { children: React.ReactNode
     }
   }, []);
 
-  const salon = useMemo(
+  const baseSalon = useMemo(
     () => salons.find((s) => s.id === salonId) ?? salons[0],
     [salonId]
   );
 
+  const { salon, setStaff, setServices } = useSalonOverrides(baseSalon);
+
   const value = useMemo(
-    () => ({ salon, salonId: salon.id, salons, setSalonId }),
-    [salon, setSalonId]
+    () => ({ salon, salonId: salon.id, salons, setSalonId, setStaff, setServices }),
+    [salon, setSalonId, setStaff, setServices]
   );
 
   return (

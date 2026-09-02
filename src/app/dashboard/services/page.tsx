@@ -40,7 +40,9 @@ export default function ServicesPage() {
 }
 
 function ServicesWorkspace({ salon }: { salon: Salon }) {
-  const [services, setServices] = useState<Service[]>(salon.services);
+  const { setServices } = useSalonWorkspace();
+  const services = salon.services;
+  const assignableStaff = salon.staff.filter((s) => s.active !== false);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -97,7 +99,7 @@ function ServicesWorkspace({ salon }: { salon: Salon }) {
       setServices((prev) => [
         ...prev,
         {
-          id: `custom-${Date.now()}`,
+          id: `${salon.id}-custom-${Date.now()}`,
           name: form.name,
           category: form.category || "Autre",
           durationMin: Number(form.durationMin) || 30,
@@ -183,7 +185,12 @@ function ServicesWorkspace({ salon }: { salon: Salon }) {
               <div className="space-y-2">
                 <Label>Employés assignés</Label>
                 <div className="space-y-2 rounded-xl border border-border p-3">
-                  {salon.staff.map((member) => (
+                  {assignableStaff.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Aucun employé actif — ajoutez d&apos;abord un employé.
+                    </p>
+                  )}
+                  {assignableStaff.map((member) => (
                     <label key={member.id} className="flex items-center gap-2.5 text-sm">
                       <Checkbox
                         checked={staffIds.includes(member.id)}

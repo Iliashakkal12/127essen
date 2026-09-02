@@ -89,7 +89,7 @@ production auth setup should look like.
 - `/recherche` — Marketplace search: category, neighborhood, price, rating, "open today" filters
 - `/salons/[slug]` — Salon page: services → compatible employees → date/time → confirm
 - `/reservation/confirmation` — Booking confirmation + appointment QR code
-- `/file-attente/[id]` — Virtual walk-in queue. Requires an explicit "Rejoindre la file d'attente" action — no ticket is ever created just by opening the page
+- `/file-attente/[id]` — Virtual walk-in queue. Selecting a service submits a request to the salon — no ticket is ever created just by opening the page, and none is confirmed until the salon accepts it in the dashboard's "Demandes sans rendez-vous" panel
 
 **Salon workspace ("Espace salon")**
 - `/dashboard` — Overview: today's appointments, planning, walk-in queue, quick stats
@@ -133,7 +133,11 @@ src/
     date.ts                    Casablanca-aware date helpers, seeded RNG for deterministic mock data
     platform-config.ts         single source of truth for the per-transaction business model
     salon-context.tsx          "Espace salon" active-salon context (client, localStorage-persisted)
+    hooks/use-persisted-list.ts  generic localStorage-backed list persistence
     mock/salon-operations.ts   deterministic per-salon appointments/queue/finance generator
+    mock/salon-overrides.ts    employee/service edits layered onto the seed catalog, persisted
+    mock/finance-store.ts      per-salon expense persistence
+    mock/walkin-store.ts       QR walk-in request/confirm, synced live across tabs
     services/                  BookingService, QueueService, SalonService, AdminService
     server/admin-session.ts    signed admin session token helpers (server + middleware only)
   proxy.ts                     Next.js middleware — protects /admin/**
@@ -146,7 +150,19 @@ Per-salon operational numbers (appointments, queue, revenue, commissions,
 expenses) are generated deterministically from each salon's real services
 and staff (see `src/lib/mock/salon-operations.ts`) so the same salon always
 shows the same numbers, and switching salons shows genuinely different,
-internally-consistent numbers — but none of it is persisted. Reloading
-resets any state a component held locally (e.g. appointment status changes
-in the dashboard table). See `AUDIT.md` for the production data model this
-is designed to be swapped onto.
+internally-consistent numbers.
+
+Employees, services, and expenses genuinely persist across a reload —
+they're backed by `localStorage` (see `use-persisted-list.ts` and its
+call sites), not component state, so adding an employee and refreshing
+the page keeps it, and it shows up everywhere the active salon's staff is
+read (team list, service assignment, customer-facing professional
+selection). QR walk-in requests sync **live between browser tabs on the
+same device** via the native `storage` event — open the salon dashboard
+and a salon's queue page in two tabs to see it. The one thing none of
+this does is sync across two different browsers/devices (a customer's
+phone and a salon's till) — that needs a real backend. Appointment status
+changes made in the dashboard table are the one thing that's still
+in-memory only (they represent "today," which is regenerated fresh each
+session anyway). See `AUDIT.md` §8 for the exact scope of this pass and
+§9 for the real-backend plan.
