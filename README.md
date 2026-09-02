@@ -39,10 +39,11 @@ npm run build   # next build — runs the TypeScript check as part of the build
 npm run lint    # eslint
 ```
 
-`WAGTI_ADMIN_CODE` must be set in the environment for `npm run build` to
-succeed locally (the login route reads it at build/runtime) — set it in
-`.env.local` for `next dev`, and as a real environment variable for `next
-build` / on Vercel.
+`npm run build` succeeds without `WAGTI_ADMIN_CODE` set — it's only read at
+request time by the login route, not at build time. You do need it set,
+though, for the `/admin` login to actually work once the app is running —
+set it in `.env.local` for `next dev`, and as a real environment variable
+on Vercel (see below) for the deployed app.
 
 ## Environment variables
 
